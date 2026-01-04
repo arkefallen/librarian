@@ -57,12 +57,12 @@ async function addBook(req, res) {
         return await trx.one(`INSERT INTO books (id, name, year, author, summary, publisher, pagecount, readpage, finished, reading, insertedat, updatedat) 
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`,
             [id, name, year, author, summary, publisher, pageCount, readPage, finished, reading, insertedAt, updatedAt]);
-    }).then(data => {
+    }).then(result => {
         res.status(201).json({
             status: "success",
             message: "Buku berhasil ditambahkan",
             data: {
-                bookId: data
+                bookId: result.id
             }
         });
     }).catch(error => {
@@ -109,7 +109,7 @@ async function getAllBooks(req, res) {
         }
     }
 
-    const sql = `SELECT * FROM books${conditions.length ? ' WHERE ' + conditions.join(' AND ') : ''}`;
+    const sql = `SELECT id, name, publisher FROM books${conditions.length ? ' WHERE ' + conditions.join(' AND ') : ''}`;
 
     return await db.any(sql, values)
         .then(data => {
@@ -141,10 +141,24 @@ async function getBookById(req, res) {
     return await db.result('SELECT * from books WHERE id = $1 LIMIT 1', [id])
         .then(result => {
             if (result.rowCount > 0) {
+                const data = result.rows[0];
                 return res.status(200).json({
                     status: "success",
                     data: {
-                        book: result.rows[0]
+                        book: {
+                            id: data.id,
+                            name: data.name,
+                            year: data.year,
+                            author: data.author,
+                            summary: data.summary,
+                            publisher: data.publisher,
+                            pageCount: data.pagecount,
+                            readPage: data.readpage,
+                            finished: data.finished,
+                            reading: data.reading,
+                            insertedAt: data.insertedat,
+                            updatedAt: data.updatedat
+                        }
                     }
                 });
             } else {
@@ -200,21 +214,21 @@ async function updateBook(req, res) {
     const finished = pageCount === readPage;
     const updatedAt = new Date().toISOString();
 
-    return await db.tx(async trx => {
-        return await trx.none(`UPDATE books SET name = $1, year = $2, author = $3, summary = $4, publisher = $5, pageCount = $6, readPage = $7, finished = $8, reading = $9, updatedAt = $10 WHERE id = $11`,
-            [name, year, author, summary, publisher, pageCount, readPage, finished, reading, updatedAt, id]);
-    }).then(() => {
-        res.status(200).json({
-            status: "success",
-            message: "Buku berhasil diperbarui"
-        });
-    }).catch(error => {
-        if (error.received == 0) {
+    return await db.result(`UPDATE books SET name = $1, year = $2, author = $3, summary = $4, publisher = $5, pageCount = $6, readPage = $7, finished = $8, reading = $9, updatedAt = $10 WHERE id = $11`,
+            [name, year, author, summary, publisher, pageCount, readPage, finished, reading, updatedAt, id])
+    .then(result => {
+        if (result.rowCount > 0) {
+            res.status(200).json({
+                status: "success",
+                message: "Buku berhasil diperbarui"
+            });
+        } else {
             return res.status(404).json({
                 status: "fail",
                 message: "Gagal memperbarui buku. Id tidak ditemukan"
             });
         }
+    }).catch(error => {
         res.status(500).json({
             status: "fail",
             message: `Gagal memperbarui buku. Terdapat kesalahan pada server: ${error.message}`
