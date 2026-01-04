@@ -161,4 +161,42 @@ async function getBookById(req, res) {
         });
 }
 
-module.exports = { addBook, getAllBooks, getBookById };
+// async function updateBook(req, res) {
+//     const id = req.params.id;
+
+
+// }
+
+async function deleteBook(req, res) {
+    const id = req.params.id;
+
+    if (typeof id !== 'string') {
+        return res.status(400).json({
+            status: "fail",
+            message: "Gagal menghapus buku. Tipe data bookId harus string"
+        });
+    }
+
+    return await db.result(`DELETE FROM books WHERE id = $1`, id)
+    .then(result => {
+        if (result.rowCount > 0) {
+            return res.status(200).json({
+                status: "success",
+                message : "Buku berhasil dihapus"
+            });   
+        } else {
+            return res.status(404).json({
+                status: "fail",
+                message: "Buku gagal dihapus. Id tidak ditemukan"
+            });
+        }
+    })
+    .catch(error => {
+        return res.status(500).json({
+            status: "fail",
+            message: `Gagal menghapus buku. Terdapat kesalahan pada server: ${error}`
+        });
+    });
+}
+
+module.exports = { addBook, getAllBooks, getBookById, deleteBook };
