@@ -86,7 +86,7 @@ async function getAllBooks(req, res) {
     }
 
     if (typeof reading !== 'undefined') {
-        if (typeof reading === 'number' && (reading == 0 || reading == 1)) {
+        if (reading == '0' || reading == '1') {
             values.push(reading);
             conditions.push(`reading = $${values.length}`);
         } else {
@@ -98,7 +98,7 @@ async function getAllBooks(req, res) {
     }
 
     if (typeof finished !== 'undefined') {
-        if (typeof finished === 'number' && (finished == 0 || finished == 1)) {
+        if (finished == '0' || finished == '1') {
             values.push(finished);
             conditions.push(`finished = $${values.length}`);
         } else {
