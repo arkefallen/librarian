@@ -138,22 +138,23 @@ async function getBookById(req, res) {
         });
     }
 
-    return await db.one('SELECT * from books WHERE id = $1 LIMIT 1', [id])
-        .then(data => {
-            return res.status(200).json({
-                status: "success",
-                data: {
-                    book: data
-                }
-            });
-        })
-        .catch(error => {
-            if (error.received == 0) {
+    return await db.result('SELECT * from books WHERE id = $1 LIMIT 1', [id])
+        .then(result => {
+            if (result.rowCount > 0) {
+                return res.status(200).json({
+                    status: "success",
+                    data: {
+                        book: result.rows[0]
+                    }
+                });
+            } else {
                 return res.status(404).json({
                     status: "fail",
                     message: "Buku tidak ditemukan"
                 });
             }
+        })
+        .catch(error => {
             return res.status(500).json({
                 status: "fail",
                 message: `Gagal mengambil buku. Terdapat kesalahan pada server: ${error}`
@@ -161,11 +162,65 @@ async function getBookById(req, res) {
         });
 }
 
-// async function updateBook(req, res) {
-//     const id = req.params.id;
+async function updateBook(req, res) {
+    const id = req.params.id;
 
+    const {
+        name,
+        year,
+        author,
+        summary,
+        publisher,
+        pageCount,
+        readPage,
+        reading
+    } = req.body;
 
-// }
+    if (!name) {
+        return res.status(400).json({
+            status: "fail",
+            message: "Gagal memperbarui buku. Mohon isi nama buku"
+        });
+    }
+
+    if (!year || !publisher || !author) {
+        return res.status(400).json({
+            status: "fail",
+            message: "Gagal memperbarui buku. Informasi tahun, penerbit, dan penulis buku tidak boleh kosong"
+        });
+    }
+
+    if (readPage > pageCount) {
+        return res.status(400).json({
+            status: "fail",
+            message: "Gagal memperbarui buku. readPage tidak boleh lebih besar dari pageCount"
+        });
+    }
+
+    const finished = pageCount === readPage;
+    const updatedAt = new Date().toISOString();
+
+    return await db.tx(async trx => {
+        return await trx.none(`UPDATE books SET name = $1, year = $2, author = $3, summary = $4, publisher = $5, pageCount = $6, readPage = $7, finished = $8, reading = $9, updatedAt = $10 WHERE id = $11`,
+            [name, year, author, summary, publisher, pageCount, readPage, finished, reading, updatedAt, id]);
+    }).then(() => {
+        res.status(200).json({
+            status: "success",
+            message: "Buku berhasil diperbarui"
+        });
+    }).catch(error => {
+        if (error.received == 0) {
+            return res.status(404).json({
+                status: "fail",
+                message: "Gagal memperbarui buku. Id tidak ditemukan"
+            });
+        }
+        res.status(500).json({
+            status: "fail",
+            message: `Gagal memperbarui buku. Terdapat kesalahan pada server: ${error.message}`
+        });
+    });    
+}
 
 async function deleteBook(req, res) {
     const id = req.params.id;
@@ -199,4 +254,4 @@ async function deleteBook(req, res) {
     });
 }
 
-module.exports = { addBook, getAllBooks, getBookById, deleteBook };
+module.exports = { addBook, getAllBooks, getBookById, deleteBook, updateBook };
