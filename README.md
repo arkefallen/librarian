@@ -1,6 +1,6 @@
 # 📚 Librarian API
 
-A RESTful API service for managing a book collection library. Built with Express.js and PostgreSQL, this application provides full CRUD operations for book management with comprehensive validation and error handling.
+A RESTful API service for managing a book collection library. Built with Express.js, this application provides full CRUD operations for book management with comprehensive validation and error handling. Uses in-memory array storage for simulation purposes.
 
 ---
 
@@ -11,7 +11,6 @@ A RESTful API service for managing a book collection library. Built with Express
 - [Tech Stack](#tech-stack)
 - [Prerequisites](#prerequisites)
 - [Installation & Setup](#installation--setup)
-- [Database Setup](#database-setup)
 - [Running the Application](#running-the-application)
 - [API Documentation](#api-documentation)
   - [Add a Book](#1-add-a-book)
@@ -22,7 +21,6 @@ A RESTful API service for managing a book collection library. Built with Express
 - [Response Format](#response-format)
 - [Error Handling](#error-handling)
 - [Project Structure](#project-structure)
-- [Environment Configuration](#environment-configuration)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -32,14 +30,16 @@ A RESTful API service for managing a book collection library. Built with Express
 
 **Librarian** is a lightweight RESTful API designed to manage a book collection. It allows users to perform essential operations such as adding new books, retrieving book information, updating book details, and deleting books from the library. 
 
-The API tracks reading progress for each book, including the number of pages read and whether the book is currently being read or has been finished. It features robust input validation, PostgreSQL database persistence, and follows REST API best practices.
+The API tracks reading progress for each book, including the number of pages read and whether the book is currently being read or has been finished. It features robust input validation and follows REST API best practices.
+
+> **⚠️ Note:** This application uses in-memory array storage for simulation purposes. All data will be lost when the server restarts.
 
 ### Key Highlights:
 - **Full CRUD Operations** – Create, Read, Update, and Delete books
 - **Reading Progress Tracking** – Track pages read and reading status
 - **Query Filtering** – Filter books by name, reading status, or completion status
 - **Data Validation** – Comprehensive input validation with meaningful error messages
-- **PostgreSQL Integration** – Persistent data storage with transaction support
+- **In-Memory Storage** – Simple array-based storage for demonstration and testing
 
 ---
 
@@ -68,7 +68,6 @@ The API tracks reading progress for each book, including the number of pages rea
 |------------|---------|---------|
 | **[Node.js](https://nodejs.org/)** | v18+ | JavaScript runtime environment |
 | **[Express.js](https://expressjs.com/)** | ^5.2.1 | Web application framework for building RESTful APIs |
-| **[pg-promise](https://github.com/vitaly-t/pg-promise)** | ^12.3.0 | PostgreSQL interface with promise support |
 | **[nanoid](https://github.com/ai/nanoid)** | ^5.1.6 | Unique ID generator for book identifiers |
 | **[connect-timeout](https://github.com/expressjs/timeout)** | ^1.9.1 | Request timeout middleware |
 
@@ -81,11 +80,11 @@ The API tracks reading progress for each book, including the number of pages rea
 | **[eslint-config-dicodingacademy](https://www.npmjs.com/package/eslint-config-dicodingacademy)** | ^0.9.5 | Dicoding Academy ESLint style guide |
 | **[globals](https://www.npmjs.com/package/globals)** | ^17.0.0 | Global variables configuration for ESLint |
 
-### Database
+### Data Storage
 
 | Technology | Purpose |
 |------------|---------|
-| **[PostgreSQL](https://www.postgresql.org/)** | Primary relational database for data persistence |
+| **In-Memory Array** | Simple array-based storage for simulation and testing |
 
 ---
 
@@ -95,7 +94,6 @@ Before you begin, ensure you have the following installed on your system:
 
 - **Node.js** (version 18 or higher) – [Download here](https://nodejs.org/)
 - **npm** (comes with Node.js) or **yarn**
-- **PostgreSQL** (version 12 or higher) – [Download here](https://www.postgresql.org/download/)
 
 ---
 
@@ -114,65 +112,7 @@ cd librarian
 npm install
 ```
 
-### 3. Configure Database Connection
-
-Open `src/controller.js` and update the database connection string to match your PostgreSQL configuration:
-
-```javascript
-const db = pgp('postgres://username:password@localhost:5432/librarian');
-```
-
-Replace:
-- `username` – Your PostgreSQL username (default: `postgres`)
-- `password` – Your PostgreSQL password
-- `localhost:5432` – Your PostgreSQL host and port
-- `librarian` – Your database name
-
-> **💡 Tip:** For production environments, consider using environment variables for database credentials.
-
----
-
-## 🗄 Database Setup
-
-### 1. Create the Database
-
-Connect to PostgreSQL and create a new database:
-
-```sql
-CREATE DATABASE librarian;
-```
-
-### 2. Create the Books Table
-
-Connect to the `librarian` database and run the following SQL:
-
-```sql
-CREATE TABLE books (
-    id VARCHAR(21) PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    year INTEGER NOT NULL,
-    author VARCHAR(255) NOT NULL,
-    summary TEXT,
-    publisher VARCHAR(255) NOT NULL,
-    pagecount INTEGER NOT NULL DEFAULT 0,
-    readpage INTEGER NOT NULL DEFAULT 0,
-    finished BOOLEAN NOT NULL DEFAULT FALSE,
-    reading BOOLEAN NOT NULL DEFAULT FALSE,
-    insertedat TIMESTAMP NOT NULL,
-    updatedat TIMESTAMP NOT NULL
-);
-```
-
-### 3. Create Indexes (Optional but Recommended)
-
-```sql
--- Index for name search
-CREATE INDEX idx_books_name ON books (name);
-
--- Index for filtering queries
-CREATE INDEX idx_books_reading ON books (reading);
-CREATE INDEX idx_books_finished ON books (finished);
-```
+That's it! No database configuration required.
 
 ---
 
@@ -543,35 +483,20 @@ librarian/
 | File | Description |
 |------|-------------|
 | `src/app.js` | Express application setup, middleware configuration, and route definitions |
-| `src/controller.js` | Contains all controller functions for handling book CRUD operations and database interactions |
+| `src/controller.js` | Contains all controller functions for handling book CRUD operations and in-memory data storage |
 | `eslint.config.mjs` | ESLint configuration following Dicoding Academy style guide |
 
 ---
 
-## ⚙️ Environment Configuration
+## ⚙️ Configuration
 
-### Current Configuration (Default)
+### Default Configuration
 
-The application uses hardcoded configuration in the codebase:
+The application uses the following default configuration:
 
 - **Port:** 9000
-- **Database:** PostgreSQL at `localhost:5432/librarian`
 - **Timeout:** 10 seconds
-
-### Recommended: Using Environment Variables
-
-For production deployment, consider migrating to environment variables:
-
-```bash
-# .env file example
-PORT=9000
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=librarian
-DB_USER=postgres
-DB_PASSWORD=your_password
-REQUEST_TIMEOUT=10s
-```
+- **Storage:** In-memory array (data resets on server restart)
 
 ---
 

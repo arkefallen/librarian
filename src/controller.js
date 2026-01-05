@@ -1,6 +1,6 @@
 /* eslint-disable linebreak-style */
 const { nanoid } = require('nanoid');
-const books = require('./books');
+const books = [];
 
 async function addBook(req, res) {
   const {
